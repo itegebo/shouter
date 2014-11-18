@@ -1,6 +1,6 @@
 (ns shouter.views.shouts
   (:require [shouter.views.layout :as layout]
-            [hiccup.core :refer [h]]
+            [hiccup.core :refer [h]] ; TODO rename to escape?
             [hiccup.form :as form]))
 
 (defn shout-form []

@@ -10,8 +10,8 @@
             "width=device-width, initial-scale=1, maximum-scale=1"}]
     [:title title]
     (h/include-css "/stylesheets/base.css"
-                 "/stylesheets/skeleton.css"
-                 "/stylesheets/screen.css")
+                   "/stylesheets/skeleton.css"
+                   "/stylesheets/screen.css")
     (h/include-css "http://fonts.googleapis.com/css?family=Sigmar+One&v1")]
    [:body
     [:div {:id "header"}
@@ -21,4 +21,4 @@
 (defn four-oh-four []
   (common "Page Not Found"
           [:div {:id "four-oh-four"}
-           "The page you requested could not be found"]))
+           [:h2 "The page you requested could not be found"]]))

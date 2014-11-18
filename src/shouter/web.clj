@@ -5,8 +5,7 @@
             [compojure.handler :as handler]
             [shouter.controllers.shouts :as shouts]
             [shouter.views.layout :as layout]
-            [shouter.models.migration :as schema])
-  (:gen-class))
+            [shouter.models.migration :as schema]))
 
 (defroutes routes
   shouts/routes
@@ -19,7 +18,7 @@
   (ring/run-jetty application {:port port
                                :join? false}))
 
-(defn -main []
-  (schema/migrate)
-  (let [port (Integer. (or (System/getenv "PORT") "8080"))]
-    (start port)))
+;; (defn -main []
+;;   (schema/migrate)
+;;   (let [port (Integer. (or (System/getenv "PORT") "7070"))]
+;;     (start port)))

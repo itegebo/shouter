@@ -1,11 +1,35 @@
 (ns shouter.models.shout
-  (:require [clojure.java.jdbc :as sql]))
+  (:require [clojure.java.jdbc :as sql]
+            [shouter.system :refer [current-dev-jdbc-url]]))
 
 (def spec (or (System/getenv "DATABASE_URL")
-              "postgresql://localhost:5432/shouter"))
+              ;;"postgresql://localhost:5432/shouter"
+              {:classname "org.h2.Driver"
+               ;; there's also a shell
+               ;; http://www.h2database.com/html/tutorial.html#shell_tool
+               ;; Scripts and tracefiles may be used to bootstrap
+               ;; migration scripts
+               ;; NOTE We'll probably want to create *both* a tcp and
+               ;; web server to take advantage of both the console and
+               ;; multiple connections.
+               ;; http://www.h2database.com/html/tutorial.html#using_server
+               ;; TODO Add logging
+               ;; http://www.h2database.com/html/features.html#database_url
+               ;; http://www.h2database.com/html/features.html#in_memory_databases
+               ;; http://www.h2database.com/html/features.html#other_logging
+               :subprotocol "h2:mem"
+               :subname "shout"
+               }
+              ))
 
-(defn all []
-  (into [] (sql/query spec ["select * from shouts order by id desc limit 128"])))
+(defn all
+  ([] (all (current-dev-jdbc-url)))
+  ([jdbc-url]
+     (into []
+           (sql/query jdbc-url
+                      ["select * from shouts order by id desc limit 128"]))))
 
-(defn create [shout]
-  (sql/insert! spec :shouts [:body] [shout]))
+(defn create
+  ([shout] (create (current-dev-jdbc-url) shout))
+  ([jdbc-url shout]
+     (sql/insert! jdbc-url :shouts [:body] [shout])))
