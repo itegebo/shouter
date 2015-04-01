@@ -55,3 +55,38 @@ Compile-time state seems to make the most sense; compile into more
 primitive language elements, either keeping state whilst doing so or
 by emitting runtime elements that do it later.
 
+Is it possible to define single-page and server-round-trip transitions
+with the same description?
+
+DATASTORE ISSUES
+
+Schema: Data types, constraints, object graph
+Pagination
+Update model wrt consistency, aka transactions, phantom reads
+Querying with lazy object graph retrieval
+  Ordering - define sort functions that closely map
+  Caching - marking dirty
+
+Protocol shouldn't matter, i.e. REST, TCP+SQL should not effect many
+of the above issues.  Schema and query language are closely related
+and cannot, in general, be made uniform without local data plus shim
+logic as oppose to direct representation in the remote store.
+
+RENDERING
+
+By default, provide namespaced class and id attributes that can be
+compressed along with the corresponding source map for debugging.
+Perhaps separate the "functional markup" from the "aesthetic markup"
+by providing constraints/transformations distinct from the
+template-style approach of views:
+
+(view (form action [input ...]
+        (field ...))
+      (layout two-column (labels left-justified)))
+
+You should describe the kind of visual object, its role, and the
+layout; a rendering pass should transform the "functional markup" in
+such a way that the CSS/JS mechanisms used to achieve the desired
+effect aren't specified, but derived.  The kind, role, and state
+should help determine color, font, etc.  There will always be the need
+for overrides.

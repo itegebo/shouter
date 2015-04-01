@@ -1,6 +1,6 @@
 (ns shouter.models.shout
   (:require [clojure.java.jdbc :as sql]
-            [shouter.system :refer [current-dev-jdbc-url]]))
+            [shouter.system.config :as config]))
 
 (def spec (or (System/getenv "DATABASE_URL")
               ;;"postgresql://localhost:5432/shouter"
@@ -22,14 +22,14 @@
                }
               ))
 
-(defn all
-  ([] (all (current-dev-jdbc-url)))
+(defn all ([] (all (config/jdbc-url)))
   ([jdbc-url]
      (into []
            (sql/query jdbc-url
+                      ;; assumes id increases with created_at
                       ["select * from shouts order by id desc limit 128"]))))
 
 (defn create
-  ([shout] (create (current-dev-jdbc-url) shout))
+  ([shout] (create (config/jdbc-url) shout))
   ([jdbc-url shout]
      (sql/insert! jdbc-url :shouts [:body] [shout])))

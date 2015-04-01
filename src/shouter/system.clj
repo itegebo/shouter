@@ -1,9 +1,8 @@
 (ns shouter.system
-  (:require [ring.adapter.jetty :as ring])
   (:require [com.stuartsierra.component :as component])
-  (:require [shouter.web :as web]
-            [shouter.models.migration :as schema])
-  (:import [org.h2.tools Server]))
+  (:require [shouter.system.web :as web])
+  (:require [shouter.system.db :as db])
+  (:require [shouter.system.config :as config]))
 
 ;;; Component: Lessons Learned
 ;;
@@ -17,56 +16,24 @@
 ;; * It's super annoying to be left in an inconsistent state when
 ;;   something fails to start/stop.
 
-(defrecord H2Console [server]
-  component/Lifecycle
-  (start [this] (.start (:server this)) this)
-  (stop [this] (.stop (:server this)) this))
 
-(defn h2console [port]
-  (let [varargs (into-array String ["-webPort" (str port)])]
-    (H2Console. (Server/createWebServer varargs))))
-
-(defrecord H2TcpServer [server host port name]
-  component/Lifecycle
-  (start [this] (.start (:server this)) this)
-  (stop [this] (.stop (:server this)) this))
-
-;; TODO Add to a new protocol for all DBs
-;; TODO Support more features through URL config
-(defn jdbc-url [s]
-  (str "jdbc:h2:tcp://" (:host s) ":" (:port s) "/" "mem:" (:name s)))
-
-(defn h2tcpserver [host port name]
-  (let [varargs (into-array String ["-tcpPort" (str port)])]
-    (H2TcpServer. (Server/createTcpServer varargs) host port name)))
-
-(declare current-dev-jdbc-url)
-
-(defrecord Jetty [server app port]
-  component/Lifecycle
-  (start [this]
-    (when (not (and (:server this)
-                    (.isRunning (:server this))))
-      (schema/migrate (current-dev-jdbc-url))
-      (assoc this :server
-             (ring/run-jetty app {:port port
-                                  :join? false}))))
-  (stop [this] (.stop (:server this)) this))
-
-;; FIX This is not going to work, we need to separate creation from
-;; starting.
-(defn jetty [app port]
-  (Jetty. nil app port))
-
-(defn system []
+(defn system [cfg]
   (component/system-map
-   :h2console (h2console 7777)
-   :h2 (h2tcpserver "localhost" 7001 "shouts")
-   :jetty (component/using
-           (jetty web/application 7000)
-           [:h2])))
+   :h2console (db/h2console (get-in cfg [:h2console :port]))
+   :h2 (db/h2tcpserver (get-in cfg [:h2 :port]))
+   ;; :jetty (component/using
+   ;;         (web/jetty (get-in cfg [:http :port]))
+   ;;         [:h2])
+   ;; :aleph-http (component/using
 
-(def dev-system (system))
+   ;;              (web/aleph-http (get-in cfg [:http :port]))
+   ;;              [:h2])
+   :immutant (component/using
+                (web/immutant (get-in cfg [:http :port]))
+                [:h2])
+   ))
+
+(def dev-system (system (config/dev)))
 
 (defn start-dev-system []
   (alter-var-root #'dev-system component/start))
@@ -74,5 +41,3 @@
 (defn stop-dev-system []
   (alter-var-root #'dev-system component/stop))
 
-(defn current-dev-jdbc-url []
-  (jdbc-url (:h2 dev-system)))
